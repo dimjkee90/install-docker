@@ -1,3 +1,2 @@
 # install-docker
-Ansible role for docker installation \
-CentOS, Ubuntu
+Ansible role for docker installation on CentOS, Ubuntu
