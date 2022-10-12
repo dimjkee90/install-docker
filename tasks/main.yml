@@ -1,0 +1,98 @@
+---
+ - name: check OS
+   debug: msg={{ansible_distribution}}-{{ansible_distribution_version}}
+
+ - name: install docker to CentOS
+   block:
+     - name: set mydistribution
+       ansible.builtin.set_fact:
+         mydistribution: "{{ 'rhel' if (ansible_distribution == 'Red Hat Enterprise Linux') else (ansible_distribution | lower) }}"
+
+
+     - name: Add signing key
+       ansible.builtin.rpm_key:
+         key: "https://download.docker.com/linux/{{ mydistribution }}/gpg"
+         state: present
+ 
+     - name: Add repository into repo.d list
+       ansible.builtin.yum_repository:
+         name: docker
+         description: docker repository
+         baseurl: "https://download.docker.com/linux/{{ mydistribution }}/$releasever/$basearch/stable"
+         enabled: true
+         gpgcheck: true
+         gpgkey: "https://download.docker.com/linux/{{ mydistribution }}/gpg"
+ 
+     - name: Install Docker
+       ansible.builtin.yum:
+         name:
+           - docker-ce
+           - docker-ce-cli
+           - containerd.io
+           - docker-compose-plugin
+         state: latest
+         update_cache: true
+ 
+     - name: Start Docker
+       ansible.builtin.service:
+         name: "docker"
+         enabled: true
+         state: started     
+   when: ansible_facts['distribution'] == 'CentOS'
+         
+
+ - name: Install docker Ubuntu
+   block:
+     - name: Install required system packages
+       apt:
+         update_cache: yes
+         name:
+           - ca-certificates
+           - curl
+           - gnupg
+           - lsb-release
+           - python3-pip
+    
+     - name: Add Docker GPG apt Key
+       apt_key:
+         url: https://download.docker.com/linux/ubuntu/gpg
+         state: present
+    
+     - name: Add Docker Repository
+       apt_repository:
+         repo: deb https://download.docker.com/linux/ubuntu bionic stable
+         state: present
+       when: ansible_distribution_release == 'bionic'
+    
+     - name: Add Docker Repository
+       apt_repository:
+         repo: deb https://download.docker.com/linux/ubuntu focal stable
+         state: present
+       when: ansible_distribution_release == 'focal'
+    
+     - name: Install docker 
+       apt: 
+         update_cache: yes
+         name:
+           - docker-ce
+           - docker-ce-cli
+           - containerd.io
+           - docker-compose-plugin
+    
+     - name: Install required python docker modules
+       pip:
+         name: 
+           - docker
+           - jsondiff
+    
+#     - name: Download docker-compose {{ docker_compose_version }}
+#       get_url:
+#         url: https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-linux-x86_64
+#         dest: /usr/local/bin/docker-compose
+#         mode: "+x"
+    
+#     - name: link docker-compose
+#       command: ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+#       when: sym.stat.islnk is defined
+   when: ansible_distribution == "Ubuntu"
+
