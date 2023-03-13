@@ -1,3 +1,0 @@
----
-# vars file for install-docker
-docker_compose_version: v2.6.1

@@ -1,0 +1,11 @@
+---
+###
+docker_registry_login: false
+docker_registry:
+  url: "{{ looup('env', 'CI_REGISTRY') }}"
+  user: "gitlab-ci-token"
+  password: "{{ looup('env', 'CI_JOB_TOKEN') }}"
+
+docker_prune_job: false
+
+pip_url: "https://bootstrap.pypa.io/get-pip.py"
